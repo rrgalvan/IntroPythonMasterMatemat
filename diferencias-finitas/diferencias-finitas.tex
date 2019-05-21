@@ -10,6 +10,7 @@
 \usepackage{amsmath}
 \usepackage{amsfonts}
 
+\usepackage{graphicx}
 \usepackage{enumerate}
 
 %Definitions of numbers
@@ -174,8 +175,10 @@ literate={ü}{{\"u}}1
 \newcommand{\sobre}{\mbox{\ sobre \ }}
 
 \title{Práctica de diferencias finitas con Python}
+\author{Rafa Rodríguez Galván}
 
 \begin{document}
+\maketitle
 
   En este documento utilizaremos Python para  la
   aproximación numérica de ecuaciones en derivadas parciales mediante
@@ -505,10 +508,22 @@ c\cdot \frac{u_{i+1}-u_{i-1}}{2h} -\frac{u_{i-1}-2u_i + u_{i+1}}{h^2}
 = f_i, \quad i=1,\dots,
 $$
 con $f_i=f(x_i)$. Podemos escribir este sistema de forma matricial,
-$A u_h = F$, donde el segundo miembro, $F$, coincide con el estudiado en
+$A u_h = F$, donde el segundo miembro, $F$, se calcula de forma similar a
 la sección~\ref{sec:MEF-difusion-1d}, y $A$ es una matriz tridiagonal
 que puede ser fácilmente determinada procediendo como en dicha
 sección.
+
+Por ejemplo, en el caso del vector $F$, el primer y el último
+elementos (que corresponden respectivamente al primer y al último nodo
+interior, $x_1$ y $x_N$), se verán modificados como se muestra a continuación:
+$$
+F=
+\begin{pmatrix}
+  f_1 + u_a/h^2 + c\, u_a/(2h)
+  \\ f_2 \\ \vdots \\ f_{n-1} \\[1mm]
+  f_n+u_b/h^2 - c\, u_b/(2h)
+\end{pmatrix}
+$$
 
 \subsubsection{Ejercicio 3}
 \begin{enumerate}[a)]
@@ -540,7 +555,7 @@ sección.
   anteriormente) e imprima la gráfica resultante.
 \item Repetir el experimento, visualizando la gráfica con valores
   crecientes de $c$ en el intervalo $[0,200]$.
-
+gg
   El resultado esperado es: a mediada que aumenta la convección, se
   producen fuertes oscilaciones en la gráfica\footnote{Desde un punto
     de vista matemático, el motivo de estas oscilaciones está bien
@@ -604,8 +619,8 @@ def conv_difus_1d(f, c, ua, ub, n, a=0, b=1):
     x_interior = x[1:n+1]
 
     f_h = f(x_interior) # f_h es el array resultante de aplicar f a cada elmento del array x
-    f_h[0]  += ua/h**2
-    f_h[-1] += ub/h**2
+    f_h[0]  += ua/h**2 + c*ua/(2*h)
+    f_h[-1] += ub/h**2 - c*ub/(2*h)
 
     ### 3. Resolución del sistema
     from numpy.linalg import solve
@@ -616,8 +631,6 @@ def conv_difus_1d(f, c, ua, ub, n, a=0, b=1):
 
     # Devolvemos la partición x y la solución obtenida
     return x, u
-
-
 
 
 
@@ -665,16 +678,43 @@ $$
 con $f_i=f(x_i)$. La matriz (que vuelve a ser tridiagonal) y el
 segundo miembro se pueden construir de la forma comentada en los
 ejercicios anteriores.
+  Por ejemplo, el segundo miembro será:
+  $$
+  F=
+  \begin{pmatrix}
+    f_1 + u_a/h^2 + c\, u_a/(2h)
+    \\ f_2 \\ \vdots \\ f_{n-1} \\[1mm]
+    f_n+u_b/h^2
+  \end{pmatrix}.
+  $$
 
 \subsubsection{Ejercicio 4}
 \begin{itemize}
 \item Repetir el Ejercicio 3 pero definiendo una función, a la que
   llamaremos \texttt{conv\_difus\_upwind\_1d}. En ella se utilizarán
   diferencias finitas con una discretización «aguas arriba» para la
-  convección. El resultado esperado es: no se produce ningún tipo de
+  convección.
+
+  El resultado esperado es: no se produce ningún tipo de
   oscilación cuando aumenta la convección. ¡Y esto es así incluso para
   pequeños valores de $n$!\footnote{El motivo es que en este caso, el
     esquema es incondicionlamente estable}
+
+  Por ejemplo, se muestran imágenes para esquemas centrado aguas
+  arriba (izquierda) y descentrado (derecha) con $n=21$ y $c=140$. Se
+  puede observar como, en el caso descentrado aguas arriba, la
+  convección en sentido positivo, $c>0$, ``arrastra hacia la derecha
+  la gráfica'' sin que se produzcan oscilaciones.
+  \begin{center}
+  \begin{tabular}{cc}
+    \includegraphics[width=0.47\linewidth]{conv-dif-centrado}&
+    \includegraphics[width=0.47\linewidth]{conv-dif-descentrado}
+    \\
+    \small Diferencias finitas centradas
+    &
+    \small Diferencias finitas aguas arriba
+  \end{tabular}
+\end{center}
 \item Modificar la función anterior para que
   \begin{itemize}
   \item Acepte tanto valores positivos como negativos para la
